@@ -1,0 +1,28 @@
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.19
+    hooks:
+      - id: ruff-check
+        args: [--fix]
+      - id: ruff-format
+
+  - repo: local
+    hooks:
+      - id: ty
+        name: ty (backend types)
+        entry: bash -c 'cd backend && uvx ty check server worker shared'
+        language: system
+        files: ^backend/.*\.py$
+        pass_filenames: false
+      - id: prettier
+        name: prettier (app)
+        entry: bash -c 'cd app && bun run format'
+        language: system
+        files: ^app/.*\.(ts|tsx|js|jsx|json)$
+        pass_filenames: false
+      - id: eslint
+        name: eslint (app)
+        entry: bash -c 'cd app && bunx eslint .'
+        language: system
+        files: ^app/.*\.(ts|tsx|js|jsx)$
+        pass_filenames: false

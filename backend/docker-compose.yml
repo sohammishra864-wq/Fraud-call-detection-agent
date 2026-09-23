@@ -1,0 +1,55 @@
+services:
+  server:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    env_file: .env
+    environment:
+      MONGODB_URI: mongodb://mongo:27017
+      NEO4J_URI: neo4j://neo4j:7687
+      HF_HOME: /root/.cache/huggingface
+    volumes:
+      - hf-cache:/root/.cache/huggingface
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mongo
+      - neo4j
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: .
+      dockerfile: worker/Dockerfile
+    env_file: .env
+    environment:
+      MONGODB_URI: mongodb://mongo:27017
+      ALERT_INTAKE_URL: http://server:8000/alerts
+    depends_on:
+      - mongo
+      - server
+    restart: unless-stopped
+
+  mongo:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    restart: unless-stopped
+
+  neo4j:
+    image: neo4j:5
+    environment:
+      NEO4J_AUTH: ${NEO4J_USERNAME:-neo4j}/${NEO4J_PASSWORD:-neo4jlocal}
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    volumes:
+      - neo4j-data:/data
+    restart: unless-stopped
+
+volumes:
+  mongo-data:
+  neo4j-data:
+  hf-cache:
